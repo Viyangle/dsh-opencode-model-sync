@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-11-03
+
+### Added
+
+- `retireBundledRoute` option: after a sync, remove the bundled `opencode-go`
+  provider route and move `agent-default-model` to the generated route that
+  serves the same model. Only the untouched default profile is eligible, and
+  retirement aborts when the default model is not in the live catalog.
+- `status` now reports a `bundled` comparison: how many live models DSH's
+  bundled snapshot is missing, which bundled models are no longer live, and
+  whether the plugin has become redundant (`redundant: true`).
+- Dry runs report the bundled route they would retire.
+
 ## [0.1.1] - 2026-11-03
 
 ### Fixed

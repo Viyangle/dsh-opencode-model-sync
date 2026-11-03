@@ -67,12 +67,13 @@ Each route carries its models, context/output limits, image support, and
 reasoning levels translated from the catalog. Models served over protocols DSH
 cannot speak (currently `generate-content` for Gemini models) are skipped.
 
-The bundled `opencode-go` route is **not modified**. DSH's adapter takes the
-wire protocol at the route level, so a live catalog that spans three protocols
-cannot be represented by one provider route without dropping its session
-header and compatibility quirks. Leaving the bundled route intact means an
-existing default model selection keeps working while the synced routes take
-over discovery of new models.
+The bundled `opencode-go` route is **not modified by default**. DSH's adapter
+takes the wire protocol at the route level, so a live catalog that spans three
+protocols cannot be represented by one provider route without dropping its
+session header and compatibility quirks. Leaving the bundled route intact means
+an existing default model selection keeps working while the synced routes take
+over discovery of new models. Set [`retireBundledRoute`](#retiring-the-bundled-route)
+when you want the duplicate gone.
 
 ## Usage
 
@@ -91,10 +92,30 @@ opencode_model_sync action=sync dryRun=true
 opencode_model_sync action=remove
 ```
 
-- `status` — last attempt/success, last error, and the live model count each
-  generated route currently reports.
+- `status` — last attempt/success, last error, the live model count of each
+  generated route, and how the live catalog compares with DSH's bundled one.
 - `sync` — fetch the catalog now. Only changed routes are written.
 - `remove` — delete the three generated routes from settings.
+
+## Retiring the bundled route
+
+By default the bundled `opencode-go` provider stays registered, so a model that
+is already in DSH's snapshot appears twice. Set `retireBundledRoute: true` to
+let the plugin remove that route on the next sync:
+
+1. It only removes the provider when its profile is the untouched default
+   (`opencode-go: {}`). A customized profile is left alone with a warning.
+2. It first moves `agent-default-model` to the generated route that serves the
+   same model. If the default model is not in the live catalog, retirement is
+   aborted so DSH never points at a missing route.
+3. It unsets `providers.opencode-go` from the `llm-pi-ai` settings section.
+
+This is one-way: turning the option off later does not restore the route. To
+restore it manually, add `opencode-go: {}` back to the `providers` dict; the
+bundled catalog and ambient credentials are then used again.
+
+Session-level model selections are not migrated: a conversation that pinned a
+model under the old provider will report `UNKNOWN_MODEL` after retirement.
 
 ## Configuration
 
@@ -114,6 +135,7 @@ shown below; every field is optional.
     displayNamePrefix: OpenCode Go
     sessionId: 00000000-0000-7000-8000-000000000000
     retiredModels: drop
+    retireBundledRoute: false
     excludeModels: []
     timeoutMs: 20000
 ```
@@ -129,6 +151,7 @@ shown below; every field is optional.
 | `displayNamePrefix` | `OpenCode Go` | Display prefix shown in the model picker. |
 | `sessionId` | `00000000-0000-7000-8000-000000000000` | Value of the required `x-opencode-session` header. All conversations on the generated routes share it. |
 | `retiredModels` | `drop` | `drop` follows the live catalog; `keep` keeps models that disappeared from the catalog on the same route. |
+| `retireBundledRoute` | `false` | Remove the bundled `opencode-go` provider after a sync and move the default model to the matching generated route. One-way; see below. |
 | `excludeModels` | `[]` | Model ids that must never be synced. |
 | `timeoutMs` | `20000` | Catalog fetch timeout. |
 
@@ -162,8 +185,9 @@ human-readable and the pi-ai adapter rebuilds on the next request.
 
 - **Cost is not synced.** DSH's provider configuration has no cost field; synced
   models report zero cost in the usage panel.
-- **The bundled `opencode-go` route remains.** While DSH ships an older snapshot,
-  the same model can appear under both the bundled route and a synced route.
+- **The bundled `opencode-go` route remains by default.** While DSH ships an
+  older snapshot, the same model can appear under both the bundled route and a
+  synced route. Enable `retireBundledRoute` to remove it.
 - **One session id for every conversation.** Generated routes are hand-declared
   providers, and only the bundled catalog provider receives DSH's per-session
   `x-opencode-session` header. A fixed value satisfies the gateway but may

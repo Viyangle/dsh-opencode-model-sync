@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { planRoutes } from '../lib/plan.js'
+import { isBundledRouteRetirable, planRoutes, routeForModel } from '../lib/plan.js'
 
 const OPTIONS = { retiredModels: 'drop', excludeModels: [] }
 
@@ -100,4 +100,22 @@ test('a non-object provider value is refused', () => {
     () => planRoutes([route('r-chat', 'openai-completions', ['a'])], { 'r-chat': 'nope' }, OPTIONS),
     /not an object/,
   )
+})
+
+test('routeForModel finds the generated route serving a model', () => {
+  const routes = [
+    route('r-chat', 'openai-completions', ['chat-model']),
+    route('r-anthropic', 'anthropic-messages', ['anthropic-model']),
+  ]
+  assert.equal(routeForModel(routes, 'anthropic-model'), 'r-anthropic')
+  assert.equal(routeForModel(routes, 'missing'), undefined)
+})
+
+test('only the untouched bundled provider profile may be retired', () => {
+  assert.equal(isBundledRouteRetirable({}), true)
+  assert.equal(isBundledRouteRetirable({ apiKeyEnv: 'OPENCODE_API_KEY' }), false)
+  assert.equal(isBundledRouteRetirable({ models: [] }), false)
+  assert.equal(isBundledRouteRetirable(null), false)
+  assert.equal(isBundledRouteRetirable([]), false)
+  assert.equal(isBundledRouteRetirable('opencode-go'), false)
 })

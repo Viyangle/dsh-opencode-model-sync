@@ -1,6 +1,6 @@
 {
   "name": "dsh-opencode-model-sync",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Keep the DSH model picker in sync with the live OpenCode Go model catalog — new models appear without a DSH release.",
   "keywords": [
     "dsh",

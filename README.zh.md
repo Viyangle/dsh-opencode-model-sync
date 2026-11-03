@@ -52,7 +52,7 @@ install_bundle target: /绝对路径/dsh-opencode-model-sync
 
 每条路由包含模型列表、上下文/输出上限、图片支持，以及从目录翻译来的推理档位。DSH 不支持的协议（目前是 Gemini 的 `generate-content`）会被跳过。
 
-内置的 `opencode-go` 路由**不会被修改**。DSH 的适配器在路由级固定协议，而同一份线上目录横跨三种协议；把新模型塞进原路由就必须整条换协议，并丢掉会话头和目录兼容细节。保留原路由意味着现有的默认模型选择继续可用，而同步路由负责发现新模型。
+内置的 `opencode-go` 路由**默认不会被修改**。DSH 的适配器在路由级固定协议，而同一份线上目录横跨三种协议；把新模型塞进原路由就必须整条换协议，并丢掉会话头和目录兼容细节。保留原路由意味着现有的默认模型选择继续可用，而同步路由负责发现新模型。需要去掉重复条目时，打开 [`retireBundledRoute`](#退役内置路由)。
 
 ## 使用
 
@@ -69,9 +69,21 @@ opencode_model_sync action=sync dryRun=true
 opencode_model_sync action=remove
 ```
 
-- `status` — 最近一次尝试/成功时间、最近错误，以及每条生成路由当前的实时模型数。
+- `status` — 最近一次尝试/成功时间、最近错误、每条生成路由的实时模型数，以及线上目录与 DSH 内置目录的差集。
 - `sync` — 立即拉取目录；只写有变化的路由。
 - `remove` — 从设置中删除三条生成路由。
+
+## 退役内置路由
+
+默认情况下内置的 `opencode-go` provider 仍然注册，因此 DSH 快照里已有的模型会出现两份。设置 `retireBundledRoute: true` 后，插件会在下次同步时清掉它：
+
+1. 只有该 provider 是未改动的默认值（`opencode-go: {}`）才会删除；带自定义字段的配置会保留并给出 warning。
+2. 先把 `agent-default-model` 迁到同一模型所在的生成路由；如果默认模型不在线上目录里，则放弃退役，避免 DSH 指向不存在的路由。
+3. 从 `llm-pi-ai` 设置里 unset `providers.opencode-go`。
+
+这是单向操作：之后再关掉该选项不会自动恢复路由。要手动恢复，在 `providers` 里补回 `opencode-go: {}` 即可（重新使用内置目录和环境凭据）。
+
+会话级模型选择不会被迁移：旧 provider 下已固定的会话会在退役后报 `UNKNOWN_MODEL`。
 
 ## 配置
 
@@ -90,6 +102,7 @@ opencode_model_sync action=remove
     displayNamePrefix: OpenCode Go
     sessionId: 00000000-0000-7000-8000-000000000000
     retiredModels: drop
+    retireBundledRoute: false
     excludeModels: []
     timeoutMs: 20000
 ```
@@ -105,6 +118,7 @@ opencode_model_sync action=remove
 | `displayNamePrefix` | `OpenCode Go` | 选择器里显示的前缀。 |
 | `sessionId` | `00000000-0000-7000-8000-000000000000` | 网关要求的 `x-opencode-session` 头的值；生成路由上的所有会话共用。 |
 | `retiredModels` | `drop` | `drop` 以线上为准；`keep` 保留从目录消失、但仍属于同一路由的模型。 |
+| `retireBundledRoute` | `false` | 同步后删除内置 `opencode-go` provider，并把默认模型迁到对应生成路由。单向操作，见上文。 |
 | `excludeModels` | `[]` | 永不参与同步的模型 id。 |
 | `timeoutMs` | `20000` | 目录请求超时。 |
 
@@ -126,7 +140,7 @@ opencode_model_sync action=remove
 ## 已知限制
 
 - **不同步成本。** DSH 的 provider 配置没有 cost 字段；同步来的模型在用量面板里显示零成本。
-- **内置 `opencode-go` 路由仍在。** DSH 自带的快照过期期间，同一个模型可能同时出现在原路由和同步路由下。
+- **内置 `opencode-go` 路由默认仍在。** DSH 自带的快照过期期间，同一个模型可能同时出现在原路由和同步路由下；打开 `retireBundledRoute` 可移除。
 - **所有会话共用一个 session id。** 生成路由是手工声明的 provider，只有内置目录 provider 会收到 DSH 的每会话 `x-opencode-session` 头。固定值满足网关要求，但可能降低跨会话的上游缓存亲和性。
 - **Gemini `generate-content` 模型被跳过**，因为 DSH 只实现 `openai-completions`、`anthropic-messages` 和 `openai-responses`。
 - **只信目录元数据。** 如果 OpenCode 公布的上下文/模态有误，同步路由会继承同样的错误。
