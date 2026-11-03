@@ -30,7 +30,8 @@ The plugin never reads the key value into logs, tool output, or settings.
 ## Install
 
 Release archives are produced by `npm pack` and attached to GitHub Releases as
-`dsh-opencode-model-sync-<version>.tgz`.
+`dsh-opencode-model-sync-<version>.tgz`. See the
+[latest release](https://github.com/Viyangle/dsh-opencode-model-sync/releases/latest).
 
 ### From Plugin Manager
 

@@ -24,6 +24,7 @@ DSH 的供应商目录是构建期快照。OpenCode 上线新模型（例如 `ki
 ## 安装
 
 Release 由 `npm pack` 生成，附件名为 `dsh-opencode-model-sync-<version>.tgz`。
+见[最新 Release](https://github.com/Viyangle/dsh-opencode-model-sync/releases/latest)。
 
 ### 通过插件管理器
 

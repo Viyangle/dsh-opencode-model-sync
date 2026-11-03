@@ -12,6 +12,14 @@
   ],
   "license": "MIT",
   "author": "dsh-opencode-model-sync contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Viyangle/dsh-opencode-model-sync.git"
+  },
+  "homepage": "https://github.com/Viyangle/dsh-opencode-model-sync#readme",
+  "bugs": {
+    "url": "https://github.com/Viyangle/dsh-opencode-model-sync/issues"
+  },
   "type": "module",
   "main": "./index.js",
   "exports": {
