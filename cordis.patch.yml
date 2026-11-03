@@ -1,0 +1,8 @@
+# OpenCode Model Sync — bundle layer.
+# Inserts exactly one Host row. The plugin only ever writes the provider routes
+# it owns inside the existing `llm-pi-ai` settings section; everything else is
+# left untouched.
+- insert:
+    - id: opencode-model-sync
+      name: 'dsh-opencode-model-sync'
+      config: {}

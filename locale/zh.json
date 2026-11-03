@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "OpenCode 模型同步",
+    "description": "让 DSH 的模型选择器自动跟随 OpenCode Go 线上模型目录，新模型无需等待 DSH 发版。"
+  }
+}

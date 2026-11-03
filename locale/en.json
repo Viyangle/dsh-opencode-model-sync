@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "OpenCode Model Sync",
+    "description": "Keeps the DSH model picker up to date with the live OpenCode Go catalog, so new models appear without waiting for a DSH release."
+  }
+}
