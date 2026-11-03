@@ -148,6 +148,12 @@ leaves the old ones behind (`action=remove` cleans up the current prefix).
    compatibility switch on Chat Completions.
 5. Compare with the current `llm-pi-ai` provider values and call
    `ctx.settings.update('llm-pi-ai', …)` only when something changed.
+6. Retry once on network errors, HTTP 429, and HTTP 5xx; a managed route whose
+   protocol disappears from the catalog is unset in `retiredModels: drop` mode.
+
+Two safety rules keep the write narrow: the plugin refuses to overwrite a
+same-named provider whose wire protocol differs, and it only removes routes it
+can identify as its own.
 
 The write goes through DSH's settings service, so the profile patch stays
 human-readable and the pi-ai adapter rebuilds on the next request.

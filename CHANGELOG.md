@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-11-03
+
+### Fixed
+
+- `retiredModels: keep` no longer resurrects models listed in `excludeModels`,
+  and no longer duplicates a model that moved to another protocol route.
+- A same-named provider using a different wire protocol is refused instead of
+  overwritten, so a user-owned route can never be clobbered by a sync.
+- Transient catalog failures (network errors, HTTP 429, HTTP 5xx) retry once
+  with a short delay instead of failing until the next interval.
+- A managed route whose protocol disappeared from the catalog is now removed
+  automatically in `retiredModels: drop` mode.
+
+### Changed
+
+- Route planning moved to `lib/plan.js`, a dependency-free module covered by
+  unit tests (21 total).
+
 ## [0.1.0] - 2026-11-03
 
 ### Added

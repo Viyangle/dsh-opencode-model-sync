@@ -117,6 +117,9 @@ opencode_model_sync action=remove
 3. 按协议翻译每条 `type: chat` 记录：上限 → `contextWindow`/`maxTokens`，图片模态 → `input: [text, image]`，推理档位 → `reasoningEfforts`（`none` 归一为 `off`）。
 4. 按协议分组成路由，补上 `x-opencode-session`，并在 Chat Completions 上加 DSH 的 `thinkingFormat: deepseek` 兼容开关。
 5. 与 `llm-pi-ai` 现有 provider 值比较，只有变化时才调用 `ctx.settings.update('llm-pi-ai', …)`。
+6. 网络错误、HTTP 429、HTTP 5xx 会重试一次；某条受管路由的协议从目录消失时，在 `retiredModels: drop` 下自动 unset。
+
+两条安全规则保证写入范围足够窄：同名但协议不同的 provider 会被拒绝覆盖；只删除能确认属于自己的路由。
 
 写入走 DSH 的设置服务，因此 profile 补丁保持可读，pi-ai 适配器会在下一次请求前重建。
 
